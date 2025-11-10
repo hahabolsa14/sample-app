@@ -1,38 +1,55 @@
+from flask import Flask
+from flask import request
+from flask import render_template
+
+sample = Flask(__name__)
+
+@sample.route("/")
+def main():
+    return render_template("index.html")
+
+if __name__ == "__main__":
+    sample.run(host="0.0.0.0", port=5050)
+
 #!/bin/bash
-# Exit immediately if any command fails
-set -e
 
-echo "--- Cleaning up old containers ---"
-docker stop samplerunning || true
-docker rm samplerunning || true
-
-echo "--- Preparing build directory ---"
+# Clean up old tempdir
 rm -rf tempdir
-mkdir tempdir
-mkdir tempdir/templates
-mkdir tempdir/static
-cp sample_app.py tempdir/.
-cp -r templates/* tempdir/templates/.
-cp -r static/* tempdir/static/.
 
-echo "--- Creating Dockerfile ---"
-# Create the Dockerfile
-echo "FROM python:3.10-slim" >> tempdir/Dockerfile
-# --- Added --no-rich to disable the progress bar that spawns a thread ---
-echo "RUN pip install --no-cache-dir --no-rich flask" >> tempdir/Dockerfile
-echo "COPY  ./static /home/myapp/static/" >> tempdir/Dockerfile
-echo "COPY  ./templates /home/myapp/templates/" >> tempdir/Dockerfile
-echo "COPY  sample_app.py /home/myapp/" >> tempdir/Dockerfile
-echo "EXPOSE 5050" >> tempdir/Dockerfile
-echo "CMD python3 /home/myapp/sample_app.py" >> tempdir/Dockerfile
+# Create directories
+mkdir -p tempdir/templates tempdir/static
+
+# Copy files
+cp sample_app.py tempdir/
+cp -r templates/* tempdir/templates/
+cp -r static/* tempdir/static/
+
+# Create Dockerfile
+cat > tempdir/Dockerfile << 'EOF'
+FROM python:3.10-slim
+
+WORKDIR /home/myapp
+
+# Copy files
+COPY ./static ./static/
+COPY ./templates ./templates/
+COPY sample_app.py .
+
+EXPOSE 5050
+
+CMD ["python3", "sample_app.py"]
+EOF
 
 cd tempdir
 
-echo "--- Building Docker image ---"
-docker build -t sampleapp .
+# Remove old container if exists
+docker rm -f samplerunning 2>/dev/null
 
-echo "--- Running Docker container ---"
+# Build and run container
+docker build -t sampleapp .
 docker run -t -d -p 5050:5050 --name samplerunning sampleapp
 
-echo "--- Listing containers ---"
+# Show running containers
 docker ps -a
+
+#04608990b00247eea7b20eaf38bbd3fa password
