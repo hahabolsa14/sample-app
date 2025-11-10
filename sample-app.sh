@@ -1,15 +1,12 @@
 #!/bin/bash
-# This 'set -e' command makes the script exit immediately if any command fails
+# Exit immediately if any command fails
 set -e
 
 echo "--- Cleaning up old containers ---"
-# Stop and remove the old container. 
-# '|| true' ensures the script doesn't fail if the container doesn't exist.
 docker stop samplerunning || true
 docker rm samplerunning || true
 
 echo "--- Preparing build directory ---"
-# Clean up and create directories
 rm -rf tempdir
 mkdir tempdir
 mkdir tempdir/templates
@@ -20,8 +17,8 @@ cp -r static/* tempdir/static/.
 
 echo "--- Creating Dockerfile ---"
 # Create the Dockerfile
-echo "FROM python" >> tempdir/Dockerfile
-# Added --no-cache-dir, which can fix thread/resource errors during pip install
+# --- Using a 'slim' image to reduce resource usage ---
+echo "FROM python:3.10-slim" >> tempdir/Dockerfile
 echo "RUN pip install --no-cache-dir flask" >> tempdir/Dockerfile
 echo "COPY  ./static /home/myapp/static/" >> tempdir/Dockerfile
 echo "COPY  ./templates /home/myapp/templates/" >> tempdir/Dockerfile
