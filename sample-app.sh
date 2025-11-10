@@ -17,9 +17,9 @@ cp -r static/* tempdir/static/.
 
 echo "--- Creating Dockerfile ---"
 # Create the Dockerfile
-# --- Using a 'slim' image to reduce resource usage ---
 echo "FROM python:3.10-slim" >> tempdir/Dockerfile
-echo "RUN pip install --no-cache-dir flask" >> tempdir/Dockerfile
+# --- Added --no-rich to disable the progress bar that spawns a thread ---
+echo "RUN pip install --no-cache-dir --no-rich flask" >> tempdir/Dockerfile
 echo "COPY  ./static /home/myapp/static/" >> tempdir/Dockerfile
 echo "COPY  ./templates /home/myapp/templates/" >> tempdir/Dockerfile
 echo "COPY  sample_app.py /home/myapp/" >> tempdir/Dockerfile
