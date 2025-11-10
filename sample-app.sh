@@ -1,40 +1,18 @@
 #!/bin/bash
-
-# Clean up old tempdir
-rm -rf tempdir
-
-# Create directories
-mkdir -p tempdir/templates tempdir/static
-
-# Copy files
-cp sample_app.py tempdir/
-cp -r templates/* tempdir/templates/
-cp -r static/* tempdir/static/
-
-# Create Dockerfile
-cat > tempdir/Dockerfile << 'EOF'
-FROM python:3.10-slim
-
-WORKDIR /home/myapp
-
-# Copy files
-COPY ./static ./static/
-COPY ./templates ./templates/
-COPY sample_app.py .
-
-EXPOSE 5050
-
-CMD ["python3", "sample_app.py"]
-EOF
-
+mkdir tempdir
+mkdir tempdir/templates
+mkdir tempdir/static
+cp sample_app.py tempdir/.
+cp -r templates/* tempdir/templates/.
+cp -r static/* tempdir/static/.
+echo "FROM python" >> tempdir/Dockerfile
+echo "RUN pip install flask" >> tempdir/Dockerfile
+echo "COPY  ./static /home/myapp/static/" >> tempdir/Dockerfile
+echo "COPY  ./templates /home/myapp/templates/" >> tempdir/Dockerfile
+echo "COPY  sample_app.py /home/myapp/" >> tempdir/Dockerfile
+echo "EXPOSE 5050" >> tempdir/Dockerfile
+echo "CMD python3 /home/myapp/sample_app.py" >> tempdir/Dockerfile
 cd tempdir
-
-# Remove old container if exists
-docker rm -f samplerunning 2>/dev/null
-
-# Build and run container
 docker build -t sampleapp .
 docker run -t -d -p 5050:5050 --name samplerunning sampleapp
-
-# Show running containers
 docker ps -a
